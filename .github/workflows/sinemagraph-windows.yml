@@ -1,0 +1,76 @@
+name: Sinemagraph Windows EXE
+
+on:
+  push:
+    branches: [rebrand/sinemagraph]
+    paths:
+      - 'apps/**'
+      - 'crates/**'
+      - 'assets/**'
+      - 'tools/sinemagraph/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/sinemagraph-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sinemagraph-windows-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install icon renderer
+        run: python -m pip install --disable-pip-version-check Pillow
+      - name: Apply Sinemagraph brand logo
+        run: python tools/sinemagraph/generate_icons.py
+      - name: Prepare Rust toolchain
+        shell: pwsh
+        run: |
+          rustup update stable
+          rustup default stable
+          rustc --version
+      - name: Format Rust sources for build
+        run: cargo fmt --all
+      - name: Build Sinemagraph Windows executable
+        env:
+          FILMCRAFT_REQUIRE_WINRES: "1"
+        run: cargo build --release --locked -p filmcraft --bin sinemagraph
+      - name: Validate EXE and bundle notices
+        shell: pwsh
+        run: |
+          if (-not (Test-Path 'target/release/sinemagraph.exe')) { throw 'Sinemagraph EXE not created' }
+          Get-Item 'target/release/sinemagraph.exe' | Format-List Name,Length,LastWriteTime
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item target/release/sinemagraph.exe dist/
+          Copy-Item LICENSE-MIT,LICENSE-APACHE,NOTICE,ATTRIBUTION.md dist/
+      - name: Upload compiled Windows EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sinemagraph-Windows-x64
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Save generated icons to fork after successful build
+        if: github.ref == 'refs/heads/rebrand/sinemagraph'
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A assets/app-icon apps/filmcraft-web/web/favicon.png apps/filmcraft-web/web/favicon.png.attribution
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "chore: store generated Sinemagraph icons"
+            git push origin "HEAD:rebrand/sinemagraph"
+          }
