@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 /// `filmcraft --help`.
 pub const USAGE: &str = "\
-Usage: filmcraft [options] [project.fcproj | media files...]
+Usage: sinemagraph [options] [project.fcproj | media files...]
 
 Options:
   --control <port>   start the localhost JSON-lines control server
@@ -67,7 +67,7 @@ pub fn parse(env_control_port: Option<String>, args: impl IntoIterator<Item = Os
         control_port: None,
         control_input_only: false,
         files: Vec::new(),
-        demo: true,
+        demo: false,
         startup_flag: false,
         recover: None,
         data_dir: None,
@@ -232,7 +232,7 @@ mod tests {
                 control_port: None,
                 control_input_only: false,
                 files: vec![],
-                demo: true,
+                demo: false,
                 startup_flag: false,
                 recover: None,
                 data_dir: None,

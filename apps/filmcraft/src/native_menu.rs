@@ -36,7 +36,7 @@ fn quit_item(app: &FilmcraftApp) -> (&'static str, Option<Accelerator>) {
 pub type MenuUpdater = Box<dyn FnMut(&[Item])>;
 
 /// Swap only Edit while a native color window owns keyboard focus. Native predefined
-/// actions go to AppKit's first responder, rather than FilmCraft's timeline inbox.
+/// actions go to AppKit's first responder, rather than Sinemagraph's timeline inbox.
 pub type NativeTextMenu = Rc<dyn Fn(bool) -> Result<(), String>>;
 
 pub fn install(app: &FilmcraftApp, ctx: egui::Context) -> (Receiver<String>, MenuUpdater, NativeTextMenu) {
@@ -45,9 +45,9 @@ pub fn install(app: &FilmcraftApp, ctx: egui::Context) -> (Receiver<String>, Men
     let mut native: Vec<(Item, MenuItem)> = Vec::new();
     let mut titles: Vec<(String, Submenu)> = Vec::new();
     let bar = Menu::new();
-    let app_menu = Submenu::new("FilmCraft", true);
+    let app_menu = Submenu::new("Sinemagraph", true);
     let [settings_label, hide_label, hide_others_label, quit_label] = NATIVE_APP_MENU;
-    // FilmCraft ▸ Settings ▸ <category> (Premiere's app-menu layout; General is Cmd+,)
+    // Sinemagraph ▸ Settings ▸ <category> (Premiere's app-menu layout; General is Cmd+,)
     let settings = Submenu::new(app.ui.language.tr(settings_label), true);
     titles.push((settings_label.into(), settings.clone()));
     for it in items.iter().filter(|i| i.id.starts_with("app.settings.")) {
@@ -55,16 +55,6 @@ pub fn install(app: &FilmcraftApp, ctx: egui::Context) -> (Receiver<String>, Men
         let mi = MenuItem::with_id(it.id.clone(), label, it.enabled, it.shortcut.as_deref().and_then(accel));
         native.push((it.clone(), mi.clone()));
         let _ = settings.append(&mi);
-    }
-    // About and Discord repeat Help menu commands: same translated labels, updated with them
-    let label = |id: &str, english: &str| items.iter().find(|i| i.id == id).map_or_else(|| english.to_string(), |i| i.label.clone());
-    let about = MenuItem::with_id("app.about", label("app.about", "About FilmCraft"), true, None);
-    let discord = MenuItem::with_id("help.discord", label("help.discord", "Join the ArtCraft Discord…"), true, None);
-    for (id, mi) in [("app.about", &about), ("help.discord", &discord)] {
-        if let Some(it) = items.iter().find(|i| i.id == id) {
-            // recorded as built (enabled, no shortcut), so the first update applies the real state
-            native.push((Item { enabled: true, shortcut: None, ..it.clone() }, mi.clone()));
-        }
     }
     // the predefined items keep their native actions; our text lets them follow the language
     let predefined = [
@@ -77,9 +67,6 @@ pub fn install(app: &FilmcraftApp, ctx: egui::Context) -> (Receiver<String>, Men
     let (quit_id, quit_accel) = quit_item(app);
     let quit = MenuItem::with_id(quit_id, app.ui.language.tr(quit_label), true, quit_accel);
     let _ = app_menu.append_items(&[
-        &about,
-        &discord,
-        &PredefinedMenuItem::separator(),
         &settings,
         &PredefinedMenuItem::separator(),
         hide,
@@ -140,8 +127,8 @@ pub fn install(app: &FilmcraftApp, ctx: egui::Context) -> (Receiver<String>, Men
         if use_native == native_shown.get() {
             return Ok(());
         }
-        let regular = edit_menu.as_ref().ok_or("FilmCraft Edit menu is unavailable")?;
-        let index = MENUS.iter().position(|top| *top == "Edit").ok_or("FilmCraft Edit menu is unavailable")? + 1;
+        let regular = edit_menu.as_ref().ok_or("Sinemagraph Edit menu is unavailable")?;
+        let index = MENUS.iter().position(|top| *top == "Edit").ok_or("Sinemagraph Edit menu is unavailable")? + 1;
         let (old, new) = if use_native { (regular, &color_edit) } else { (&color_edit, regular) };
         menu_bar.insert(new, index).map_err(|e| e.to_string())?;
         if let Err(error) = menu_bar.remove(old) {
@@ -152,9 +139,6 @@ pub fn install(app: &FilmcraftApp, ctx: egui::Context) -> (Receiver<String>, Men
         Ok(())
     });
     bar.init_for_nsapp();
-    if let Some(help) = bar.items().last().and_then(|i| i.as_submenu().cloned()) {
-        help.set_as_help_menu_for_nsapp();
-    }
     Box::leak(Box::new(bar));
     let (tx, rx) = channel();
     std::thread::spawn(move || {
