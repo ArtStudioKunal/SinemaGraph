@@ -66,14 +66,7 @@ pub fn install(app: &FilmcraftApp, ctx: egui::Context) -> (Receiver<String>, Men
     // changes prompt (#1943); the `app.quit` command closes the window through it
     let (quit_id, quit_accel) = quit_item(app);
     let quit = MenuItem::with_id(quit_id, app.ui.language.tr(quit_label), true, quit_accel);
-    let _ = app_menu.append_items(&[
-        &settings,
-        &PredefinedMenuItem::separator(),
-        hide,
-        hide_others,
-        &PredefinedMenuItem::separator(),
-        &quit,
-    ]);
+    let _ = app_menu.append_items(&[&settings, &PredefinedMenuItem::separator(), hide, hide_others, &PredefinedMenuItem::separator(), &quit]);
     let _ = bar.append(&app_menu);
     let mut edit_menu = None;
     for top in MENUS {

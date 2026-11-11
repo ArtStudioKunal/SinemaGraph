@@ -135,13 +135,12 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
         job.wrap.max_rows = 1;
         let galley = p.layout_job(job);
         let half = galley.size().x / 2.0;
-        let center = if rect.center().x - half >= left && rect.center().x + half <= right {
-            rect.center().x
-        } else {
-            (left + right) / 2.0
-        };
-        p.with_clip_rect(Rect::from_min_max(pos2(left, rect.min.y), pos2(right, rect.max.y)))
-            .galley(pos2(center - half, rect.center().y - galley.size().y / 2.0), galley, t.tab_text_active);
+        let center = if rect.center().x - half >= left && rect.center().x + half <= right { rect.center().x } else { (left + right) / 2.0 };
+        p.with_clip_rect(Rect::from_min_max(pos2(left, rect.min.y), pos2(right, rect.max.y))).galley(
+            pos2(center - half, rect.center().y - galley.size().y / 2.0),
+            galley,
+            t.tab_text_active,
+        );
     }
     let popup_id = egui::Id::unique("workspaces-popup");
     if ws_resp.clicked() || wresp.clicked() {
