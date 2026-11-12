@@ -544,7 +544,7 @@ mod tests {
         assert!(luminance(t.app_bg) < luminance(t.header_bg));
         assert!(luminance(t.header_bg) < luminance(t.panel_bg));
         assert_ne!(t.tab_bg, t.panel_bg);
-        assert!(t.radius >= 8.0 && t.gap >= 6.0);
+        assert!(t.radius >= 8.0 && t.gap == 4.0 && t.tab_h == 32.0);
     }
 
     #[test]
