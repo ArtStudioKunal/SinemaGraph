@@ -35,17 +35,23 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
     ];
 
     let gap = 14.0;
-    let columns = if width >= 1100.0 { 4 } else if width >= 760.0 { 3 } else if width >= 490.0 { 2 } else { 1 };
+    let columns = if width >= 1100.0 {
+        4
+    } else if width >= 760.0 {
+        3
+    } else if width >= 490.0 {
+        2
+    } else {
+        1
+    };
     let card_width = (width - gap * (columns - 1) as f32) / columns as f32;
     let card_height = 160.0;
     let cards_top = top + 132.0;
     for (i, (title, command, subtitle, icon)) in cards.iter().enumerate() {
         let column = i % columns;
         let row = i / columns;
-        let r = Rect::from_min_size(
-            pos2(left + column as f32 * (card_width + gap), cards_top + row as f32 * (card_height + gap)),
-            vec2(card_width, card_height),
-        );
+        let r =
+            Rect::from_min_size(pos2(left + column as f32 * (card_width + gap), cards_top + row as f32 * (card_height + gap)), vec2(card_width, card_height));
         let resp = ui.interact(r, egui::Id::unique(("imp", *command)), Sense::click());
         app.auto.add(&format!("import.{command}"), r, title);
         let hover = ui.ctx().animate_bool(resp.id, resp.hovered());
