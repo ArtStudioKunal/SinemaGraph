@@ -1012,7 +1012,7 @@ pub fn default_menu_items() -> Vec<MenuItem> {
 pub fn menu_items_for(session: &filmcraft_engine::Session) -> Vec<MenuItem> {
     let mut out = Vec::new();
     for c in filmcraft_engine::command_specs() {
-        if c.menu.is_empty() {
+        if c.menu.is_empty() || c.menu.first().copied() == Some("Help") {
             continue;
         }
         // Edit ▸ Label items carry the names from Settings ▸ Labels
@@ -1030,7 +1030,7 @@ pub fn menu_items_for(session: &filmcraft_engine::Session) -> Vec<MenuItem> {
         });
     }
     for c in UI_COMMANDS.iter().chain(crate::panels::keyboard::COMMANDS) {
-        if c.menu.is_empty() {
+        if c.menu.is_empty() || c.menu.first().copied() == Some("Help") {
             continue;
         }
         out.push(MenuItem {
