@@ -11,7 +11,7 @@ use crate::state::Mode;
 use crate::theme::Tokens;
 
 /// Height of the redesigned header; remains compatible with the integrated macOS title bar.
-pub const HEIGHT: f32 = 44.0;
+pub const HEIGHT: f32 = 38.0;
 
 /// Draws the header bar in `rect` and handles its clicks: Home, the mode tabs, the workspace name
 /// and its menu (the workspaces, then Reset to Saved Layout, Save Changes to this Workspace, Save as

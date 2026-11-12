@@ -238,8 +238,8 @@ impl Tokens {
             danger: Color32::from_rgb(0xdc, 0x51, 0x3d),
             radius: 10.0,
             radius_sm: 8.0,
-            gap: 6.0,
-            tab_h: 36.0,
+            gap: 4.0,
+            tab_h: 32.0,
         };
         match kind {
             ThemeKind::Dark => dark,
@@ -506,14 +506,14 @@ pub fn apply_visuals(ctx: &egui::Context, t: &Tokens) {
     v.widgets.open.weak_bg_fill = t.hover;
     ctx.set_visuals(v);
     ctx.global_style_mut(|s| {
-        s.spacing.item_spacing = egui::vec2(7.0, 5.0);
-        s.spacing.button_padding = egui::vec2(10.0, 4.0);
-        s.spacing.interact_size.y = 27.0;
-        s.spacing.menu_margin = egui::Margin::same(6);
-        s.text_styles.insert(TextStyle::Body, FontId::new(12.5, FontFamily::Proportional));
-        s.text_styles.insert(TextStyle::Button, FontId::new(12.5, FontFamily::Proportional));
-        s.text_styles.insert(TextStyle::Small, FontId::new(11.5, FontFamily::Proportional));
-        s.text_styles.insert(TextStyle::Heading, FontId::new(16.0, FontFamily::Name("semibold".into())));
+        s.spacing.item_spacing = egui::vec2(6.0, 4.0);
+        s.spacing.button_padding = egui::vec2(8.0, 3.0);
+        s.spacing.interact_size.y = 24.0;
+        s.spacing.menu_margin = egui::Margin::same(4);
+        s.text_styles.insert(TextStyle::Body, FontId::new(12.0, FontFamily::Proportional));
+        s.text_styles.insert(TextStyle::Button, FontId::new(12.0, FontFamily::Proportional));
+        s.text_styles.insert(TextStyle::Small, FontId::new(11.0, FontFamily::Proportional));
+        s.text_styles.insert(TextStyle::Heading, FontId::new(15.0, FontFamily::Name("semibold".into())));
         s.text_styles.insert(TextStyle::Monospace, FontId::new(12.0, FontFamily::Monospace));
         s.animation_time = ANIMATION_TIME;
     });
