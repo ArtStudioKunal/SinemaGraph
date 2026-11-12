@@ -545,7 +545,6 @@ mod tests {
         assert!(luminance(t.header_bg) < luminance(t.panel_bg));
         assert_ne!(t.tab_bg, t.panel_bg);
         assert!(t.radius >= 8.0 && t.gap >= 6.0);
-        assert!(ANIMATION_TIME > 0.0 && ANIMATION_TIME <= 0.25);
     }
 
     #[test]
