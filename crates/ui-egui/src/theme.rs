@@ -457,6 +457,14 @@ fn add_craft_fonts(fonts: &mut FontDefinitions) {
     }
 }
 
+/// Blend two theme colours without changing alpha. Shared by lightweight hover
+/// transitions, so every surface follows the selected appearance and accent.
+pub fn blend(a: Color32, b: Color32, weight: f32) -> Color32 {
+    let w = weight.clamp(0.0, 1.0);
+    let channel = |a: u8, b: u8| (f32::from(a) + (f32::from(b) - f32::from(a)) * w).round() as u8;
+    Color32::from_rgb(channel(a.r(), b.r()), channel(a.g(), b.g()), channel(a.b(), b.b()))
+}
+
 pub fn apply_visuals(ctx: &egui::Context, t: &Tokens) {
     let light = t.kind == ThemeKind::Light;
     // FilmCraft decides between light and dark itself (Settings ▸ Appearance ▸ Appearance Mode), so

@@ -82,6 +82,7 @@ impl FilmcraftApp {
         // Status / hint bar
         let sb = egui::Rect::from_min_max(egui::pos2(full.min.x, full.max.y - status_h), full.max);
         ui.painter().rect_filled(sb, 0.0, t.header_bg);
+        ui.painter().line_segment([sb.left_top(), sb.right_top()], egui::Stroke::new(1.0, t.separator));
         let now = ui.input(|i| i.time);
         if self.ui.status != self.status_seen.0 {
             self.status_seen = (self.ui.status.clone(), now);
