@@ -194,6 +194,21 @@ fn every_panel_opens_from_the_window_menu() {
     }
 }
 
+/// The panel docking menu belongs alongside the window title, not at the far
+/// right of the panel strip (Sinemagraph docking chrome regression).
+#[test]
+fn panel_menu_is_near_program_title() {
+    let mut d = Driver::demo();
+    let tab = d.rects("panel.tab.Program").into_iter().find(|(id, _)| id == "panel.tab.Program").expect("Program tab").1;
+    let button = d.rects("panel.menu.Program").into_iter().find(|(id, _)| id == "panel.menu.Program").expect("Program menu").1;
+    let body = d.rects("panel.Program").into_iter().find(|(id, _)| id == "panel.Program").expect("Program body").1;
+    assert!(button.center().x > tab.left(), "menu should follow the tab: {button:?} {tab:?}");
+    assert!(button.left() <= tab.right() + 140.0, "menu must stay beside the title tabs: {button:?} {tab:?}");
+    assert!(button.center().x < body.center().x, "menu must not sit at the far panel edge: {button:?} {body:?}");
+    d.click("panel.menu.Program");
+    assert!(d.has("panel.menu.Program.maximize"), "menu remains interactive");
+}
+
 /// #284 point 3: the panel menu's Maximize Frame keeps the layout (Restore Frame brings it back),
 /// and closing every panel still leaves a dock that Window ▸ can reopen panels into.
 #[test]

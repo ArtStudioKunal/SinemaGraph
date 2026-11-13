@@ -10,17 +10,17 @@ use crate::icons::{self, Icon};
 use crate::state::Mode;
 use crate::theme::Tokens;
 
-/// Height of the header bar. With `integrated_titlebar` it sits in the macOS title-bar strip.
+/// Height of the redesigned header; remains compatible with the integrated macOS title bar.
 pub const HEIGHT: f32 = 38.0;
 
 /// Draws the header bar in `rect` and handles its clicks: Home, the mode tabs, the workspace name
 /// and its menu (the workspaces, then Reset to Saved Layout, Save Changes to this Workspace, Save as
-/// New Workspace… and Edit Workspaces…), Discord and the quick actions.
+/// New Workspace… and Edit Workspaces…), plus the quick actions.
 pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().clone();
     p.rect_filled(rect, 0.0, t.header_bg);
-    p.line_segment([rect.left_bottom(), rect.right_bottom()], Stroke::new(1.0, Color32::BLACK));
+    p.line_segment([rect.left_bottom(), rect.right_bottom()], Stroke::new(1.0, t.separator));
     let drag = ui.interact(rect, egui::Id::unique("header-drag"), Sense::click_and_drag());
     if drag.drag_started_by(egui::PointerButton::Primary) {
         ui.ctx().send_viewport_cmd(egui::ViewportCommand::StartDrag);
@@ -31,39 +31,43 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
     }
     let mut x = rect.min.x + if app.integrated_titlebar { 104.0 } else { 14.0 };
     // Home
-    let home = Rect::from_center_size(pos2(x + 10.0, rect.center().y), vec2(26.0, 26.0));
+    let home = Rect::from_center_size(pos2(x + 15.0, rect.center().y), vec2(30.0, 30.0));
     let hresp = ui.interact(home, egui::Id::unique("hdr-home"), Sense::click()).on_hover_text(tl!("Home"));
     app.auto.add("header.home", home, "Home");
-    if hresp.hovered() {
-        p.rect_filled(home, 4.0, t.hover);
+    let home_hover = ui.ctx().animate_bool(hresp.id, hresp.hovered());
+    if home_hover > 0.0 {
+        p.rect_filled(home, 9.0, crate::theme::blend(t.header_bg, t.hover, home_hover));
     }
-    icons::paint(&p, home.shrink(5.0), Icon::Home, if hresp.hovered() { t.text } else { t.text_dim });
+    icons::paint(&p, home.shrink(7.0), Icon::Home, if hresp.hovered() { t.text } else { t.text_dim });
     if hresp.clicked() {
         app.ui.mode = Mode::Import;
     }
     x = home.max.x + 16.0;
-    // Mode tabs (14 pt; active = primary text with a 2 pt underline under the label)
+    // Rounded workspace-mode pills, with animated hover and a persistent active state.
     for (m, label, shown) in [(Mode::Import, "Import", tl!("Import")), (Mode::Edit, "Edit", tl!("Edit")), (Mode::Export, "Export", tl!("Export"))] {
         let active = app.ui.mode == m;
-        let galley = p.layout_no_wrap(shown.to_string(), Tokens::ui(14.0), if active { t.tab_text_active } else { t.tab_text });
-        let r = Rect::from_min_size(pos2(x - 6.0, rect.min.y + 6.0), vec2(galley.size().x + 12.0, rect.height() - 12.0));
+        let galley = p.layout_no_wrap(shown.to_string(), Tokens::ui(13.0), t.tab_text_active);
+        let r = Rect::from_min_size(pos2(x, rect.center().y - 15.0), vec2(galley.size().x + 22.0, 30.0));
         let resp = ui.interact(r, egui::Id::unique(("mode", label)), Sense::click());
         app.auto.add(&format!("header.mode.{}", label.to_ascii_lowercase()), r, label);
-        let col = if active || resp.hovered() { t.tab_text_active } else { t.tab_text };
-        let gw = galley.size().x;
-        p.galley_with_override_text_color(pos2(x, rect.center().y - galley.size().y / 2.0), galley, col);
+        let hover = ui.ctx().animate_bool(resp.id, resp.hovered());
         if active {
-            p.line_segment([pos2(x, rect.min.y + 29.0), pos2(x + gw, rect.min.y + 29.0)], Stroke::new(2.0, t.tab_text_active));
+            p.rect_filled(r, 10.0, crate::theme::blend(t.header_bg, t.accent, 0.25 + 0.09 * hover));
+            p.rect_stroke(r, 10.0, Stroke::new(1.0, crate::theme::blend(t.header_bg, t.accent, 0.55)), egui::StrokeKind::Inside);
+        } else if hover > 0.0 {
+            p.rect_filled(r, 10.0, crate::theme::blend(t.header_bg, t.hover, hover));
         }
+        let col = if active || resp.hovered() { t.tab_text_active } else { t.tab_text };
+        p.galley_with_override_text_color(pos2(r.center().x - galley.size().x / 2.0, rect.center().y - galley.size().y / 2.0), galley, col);
         if resp.clicked() {
             app.ui.mode = m;
         }
-        x += gw + 24.0;
+        x = r.max.x + 8.0;
     }
     let mut left_end = x;
     // In-window menus when there is no native menu bar.
     if app.ui.show_menu_bar {
-        let menu_rect = Rect::from_min_max(pos2(x + 6.0, rect.min.y + 7.0), pos2(x + 520.0, rect.max.y - 7.0));
+        let menu_rect = Rect::from_min_max(pos2(x + 4.0, rect.min.y + 8.0), pos2(x + 520.0, rect.max.y - 8.0));
         let mut mu = ui.new_child(egui::UiBuilder::new().max_rect(menu_rect).layout(egui::Layout::left_to_right(egui::Align::Center)));
         mu.style_mut().visuals.widgets.inactive.weak_bg_fill = Color32::TRANSPARENT;
         mu.style_mut().visuals.widgets.inactive.bg_stroke = Stroke::NONE;
@@ -80,8 +84,9 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
         rx -= 38.0;
         let resp = ui.interact(r, egui::Id::unique(("hdr", id)), Sense::click()).on_hover_text(tip);
         app.auto.add(&format!("header.{id}"), r, tip);
-        if resp.hovered() {
-            ui.painter().rect_filled(r, 4.0, t.hover);
+        let hover = ui.ctx().animate_bool(resp.id, resp.hovered());
+        if hover > 0.0 {
+            ui.painter().rect_filled(r, 9.0, crate::theme::blend(t.header_bg, t.hover, hover));
         }
         icons::paint(ui.painter(), r.shrink(6.0), icon, if resp.hovered() { t.text } else { t.text_dim });
         resp
@@ -122,41 +127,27 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
     // workspace name (caps)
     let ws = crate::i18n::to_uppercase(crate::i18n::t(&app.ui.workspace));
     let wg = p.layout_no_wrap(ws.clone(), Tokens::ui(11.0), t.text_dim);
-    let wr = Rect::from_min_size(pos2(rx - wg.size().x + 10.0, rect.center().y - 10.0), vec2(wg.size().x + 8.0, 20.0));
+    let wr = Rect::from_min_size(pos2(rx - wg.size().x + 5.0, rect.center().y - 12.0), vec2(wg.size().x + 18.0, 24.0));
     let wresp = ui.interact(wr, egui::Id::unique("hdr-ws-name"), Sense::click());
     app.auto.add("header.workspaceName", wr, &ws);
-    p.galley_with_override_text_color(pos2(wr.min.x + 4.0, rect.center().y - wg.size().y / 2.0), wg, if wresp.hovered() { t.text } else { t.text_dim });
-    // Community: a labelled Discord button, always one click away.
-    {
-        let label = "Discord";
-        let g = p.layout_no_wrap(label.to_string(), Tokens::ui(12.0), Color32::WHITE);
-        let w = g.size().x + 34.0;
-        let r = Rect::from_min_size(pos2(wr.min.x - w - 14.0, rect.center().y - 12.0), vec2(w, 24.0));
-        let resp = ui.interact(r, egui::Id::unique("hdr-discord"), Sense::click()).on_hover_text(tl!("Join the ArtCraft Discord (discord.gg/artcraft)"));
-        app.auto.add("header.discord", r, "Join the ArtCraft Discord");
-        ui.painter().rect_filled(r, 12.0, if resp.hovered() { t.accent_hover } else { t.accent });
-        icons::paint(ui.painter(), Rect::from_center_size(pos2(r.min.x + 14.0, r.center().y), vec2(14.0, 14.0)), Icon::Chat, Color32::WHITE);
-        ui.painter().galley(pos2(r.min.x + 25.0, r.center().y - g.size().y / 2.0), g, Color32::WHITE);
-        // Localized menus and user titles can be wider than English. Use the actual gap.
-        let left = left_end + 12.0;
-        let right = r.min.x - 12.0;
-        if right > left + 40.0 {
-            let mut job = egui::text::LayoutJob::simple_singleline(title, Tokens::ui(14.0), t.tab_text_active);
-            job.wrap.max_width = right - left;
-            job.wrap.max_rows = 1;
-            let galley = p.layout_job(job);
-            let half = galley.size().x / 2.0;
-            let center = if rect.center().x - half >= left && rect.center().x + half <= right { rect.center().x } else { (left + right) / 2.0 };
-            p.with_clip_rect(Rect::from_min_max(pos2(left, rect.min.y), pos2(right, rect.max.y))).galley(
-                pos2(center - half, rect.center().y - galley.size().y / 2.0),
-                galley,
-                t.tab_text_active,
-            );
-        }
-
-        if resp.clicked() {
-            crate::links::open(app, ui.ctx(), crate::links::DISCORD);
-        }
+    let ws_hover = ui.ctx().animate_bool(wresp.id, wresp.hovered());
+    p.rect_filled(wr, 8.0, crate::theme::blend(t.header_bg, t.tab_bg, 0.6 + 0.4 * ws_hover));
+    p.galley_with_override_text_color(pos2(wr.min.x + 9.0, rect.center().y - wg.size().y / 2.0), wg, if wresp.hovered() { t.text } else { t.text_dim });
+    // Keep the original document title layout, without upstream community promotions.
+    let left = left_end + 12.0;
+    let right = wr.min.x - 12.0;
+    if right > left + 40.0 {
+        let mut job = egui::text::LayoutJob::simple_singleline(title, Tokens::semibold(13.0), t.tab_text_active);
+        job.wrap.max_width = right - left;
+        job.wrap.max_rows = 1;
+        let galley = p.layout_job(job);
+        let half = galley.size().x / 2.0;
+        let center = if rect.center().x - half >= left && rect.center().x + half <= right { rect.center().x } else { (left + right) / 2.0 };
+        p.with_clip_rect(Rect::from_min_max(pos2(left, rect.min.y), pos2(right, rect.max.y))).galley(
+            pos2(center - half, rect.center().y - galley.size().y / 2.0),
+            galley,
+            t.tab_text_active,
+        );
     }
     let popup_id = egui::Id::unique("workspaces-popup");
     if ws_resp.clicked() || wresp.clicked() {

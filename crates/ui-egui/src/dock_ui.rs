@@ -27,7 +27,7 @@ fn bodies_id() -> egui::Id {
     area_id().with("bodies")
 }
 
-/// Width of the ≡ panel menu button at the end of each tab strip.
+/// Width of the panel menu beside the group's tab labels.
 const MENU_W: f32 = 26.0;
 
 pub(crate) fn route(app: &mut FilmcraftApp, ctx: &egui::Context, id: &str, params: &Value) -> Option<Result<Value, String>> {
@@ -574,36 +574,41 @@ impl DockContent<PanelKind> for FilmContent<'_> {
         }
     }
 
-    /// The ≡ menu, and the Timeline's sequence tabs before it while the Timeline is shown.
-    /// The sequence tabs take at most two thirds of the strip, so the group's own tabs keep room;
-    /// past that they scroll into their » list.
-    fn group_header_width(&self, _panels: &[PanelKind], active: &PanelKind, _floating: bool, strip_width: f32) -> f32 {
-        if *active == PanelKind::Timeline && !self.seqs.open.is_empty() { (self.seq_width + MENU_W).min(strip_width * 2.0 / 3.0).max(MENU_W) } else { MENU_W }
+    /// Reserve the menu directly after the tab labels, not at the opposite edge
+    /// of the panel. The dock renderer shrinks/overflows tabs as needed to keep
+    /// this control reachable even in a narrow workspace or a floating window.
+    fn group_extra_tabs_width(&self, _panels: &[PanelKind], active: &PanelKind, _floating: bool) -> f32 {
+        if *active == PanelKind::Timeline && !self.seqs.open.is_empty() { MENU_W + self.seq_width.min(340.0) } else { MENU_W }
     }
 
-    /// The ≡ panel menu of the group's shown panel; for the Timeline, its sequence tabs first.
-    fn group_header(&mut self, ui: &mut egui::Ui, _panels: &[PanelKind], active: &PanelKind, _floating: bool) {
+    /// Paint a menu button beside the active group of panel names.
+    /// Timeline sequence tabs follow the menu instead of pushing it to the far right.
+    fn group_extra_tabs(&mut self, ui: &mut egui::Ui, _panels: &[PanelKind], active: &PanelKind, _floating: bool) {
         let t = self.tokens;
-        let header = ui.max_rect();
-        let menu = Rect::from_min_max(egui::pos2((header.max.x - MENU_W).max(header.min.x), header.min.y), header.max);
-        if *active == PanelKind::Timeline && !self.seqs.open.is_empty() {
-            let strip = Rect::from_min_max(header.min, egui::pos2(menu.min.x, header.max.y));
-            let actions = dock::sequence_tabs(ui, strip, &self.seqs, &t, &mut self.app.auto);
-            if actions.iter().any(|a| matches!(a, SeqAction::Menu(..))) {
-                self.seq_menu_viewport = ui.ctx().viewport_id();
-            }
-            self.seq_actions.extend(actions);
-        }
+        let strip = ui.max_rect();
+        let menu = Rect::from_min_max(strip.min, egui::pos2((strip.min.x + MENU_W).min(strip.max.x), strip.max.y));
         let rect = Rect::from_center_size(menu.center(), vec2(18.0, 18.0));
         let response = ui.interact(rect, egui::Id::unique(("panel-menu-button", active.id())), Sense::click());
         response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, response.enabled(), "panel menu"));
         self.app.auto.add_response(&format!("panel.menu.{}", active.id()), &response, "panel menu");
+        if response.hovered() {
+            ui.painter().rect_filled(menu.shrink2(vec2(2.0, 5.0)), 6.0, t.hover);
+        }
         let color = if response.hovered() { t.tab_text_active } else { t.tab_text };
         icons::paint(ui.painter(), Rect::from_center_size(rect.center(), vec2(16.0, 16.0)), Icon::Hamburger, color);
         dock::paint_widget_focus(ui.painter(), &response, &t);
         if response.clicked() {
             self.app.ui.focused = *active;
             self.menu = Some((*active, rect.left_bottom(), ui.ctx().viewport_id()));
+        }
+
+        if *active == PanelKind::Timeline && !self.seqs.open.is_empty() && strip.right() > menu.right() {
+            let tabs = Rect::from_min_max(egui::pos2(menu.right(), strip.top()), strip.max);
+            let actions = dock::sequence_tabs(ui, tabs, &self.seqs, &t, &mut self.app.auto);
+            if actions.iter().any(|a| matches!(a, SeqAction::Menu(..))) {
+                self.seq_menu_viewport = ui.ctx().viewport_id();
+            }
+            self.seq_actions.extend(actions);
         }
     }
 }

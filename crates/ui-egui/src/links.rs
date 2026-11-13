@@ -214,22 +214,14 @@ mod tests {
 
     #[test]
     fn help_menu_items_say_where_they_go() {
-        // links show just their address; the other Help items say what they do instead
+        // Legacy command URLs remain resolvable for old automation, but the
+        // Sinemagraph interface must not expose an upstream Help/Community menu.
         for (id, _, url) in ALL {
             assert_eq!(menu_hint(id).as_deref(), Some(url), "{id}");
         }
-        assert_eq!(menu_hint("help.filmcraftHelp").as_deref(), Some(crate::panels::keyboard::HELP_URL));
-        let help_items: Vec<String> = crate::menus::menu_items(&crate::FilmcraftApp::new(filmcraft_engine::Session::default()))
-            .into_iter()
-            .filter(|it| it.path.first().map(String::as_str) == Some("Help"))
-            .map(|it| it.id)
-            .collect();
-        assert!(help_items.len() >= ALL.len() + 3, "{help_items:?}");
-        for id in &help_items {
-            let hint = menu_hint(id).unwrap_or_else(|| panic!("{id} has no hover hint"));
-            let link = url_for(id).is_some() || id == "help.filmcraftHelp";
-            assert_eq!(hint.starts_with("https://"), link, "{id}: {hint}");
-        }
+        let items = crate::menus::menu_items(&crate::FilmcraftApp::new(filmcraft_engine::Session::default()));
+        assert!(items.iter().all(|it| it.path.first().map(String::as_str) != Some("Help")));
+        assert!(items.iter().any(|it| it.id == "app.about" && it.path == ["About"]));
         assert_eq!(menu_hint("edit.undo"), None);
     }
 }

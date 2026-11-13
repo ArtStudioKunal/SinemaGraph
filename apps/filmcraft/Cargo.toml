@@ -1,11 +1,15 @@
 [package]
 name = "filmcraft"
-description = "FilmCraft desktop app"
+description = "Sinemagraph desktop app"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-default-run = "filmcraft"
+default-run = "sinemagraph"
 build = "build.rs"
+
+[[bin]]
+name = "sinemagraph"
+path = "src/main.rs"
 
 [lints]
 workspace = true

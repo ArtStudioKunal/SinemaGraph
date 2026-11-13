@@ -1,0 +1,8 @@
+asset:        sinemagraph-icon.svg
+title:        Sinemagraph black-and-white clapperboard logo (canonical vector)
+author:       Sinemagraph project owner (supplied logo artwork)
+source:       Original user-provided logo supplied for the Sinemagraph rebrand; vector traced from that artwork
+license:      MIT OR Apache-2.0
+license-file: LICENSE-MIT, LICENSE-APACHE
+added:        2026-11-12 for the Sinemagraph rebrand
+notes:        Canonical black-and-white SVG for the user-supplied Sinemagraph logo; used by tools/sinemagraph/generate_icons.py for desktop icon generation. No FilmCraft artwork reused in the new logo.

@@ -98,7 +98,8 @@ fn menu_items_toggles_and_help() {
     let menus = d.ok("ui.menu.list", json!({}));
     let find = |id: &str| menus.as_array().unwrap().iter().find(|m| m["id"] == id).cloned().unwrap_or_else(|| panic!("{id} not in menus"));
     assert_eq!(find("view.dynamicAudioWaveforms")["checked"], true);
-    assert_eq!(find("help.systemCompatibilityReport")["path"], json!(["Help"]));
+    assert!(!menus.as_array().unwrap().iter().any(|m| m["path"] == json!(["Help"])));
+    assert_eq!(find("app.about")["path"], json!(["About"]));
     assert_eq!(find("file.mediaProperties")["path"], json!(["File", "Get Media File Properties for"]));
     assert_eq!(find("clip.sceneEditDetection")["label"], "Scene Edit Detection…");
     // Dynamic Audio Waveforms toggles
