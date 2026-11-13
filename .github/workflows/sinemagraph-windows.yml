@@ -68,6 +68,10 @@ jobs:
         run: |
           Compress-Archive -Path 'dist/*' -DestinationPath 'Sinemagraph-Windows-x64.zip' -CompressionLevel Optimal -Force
           if (-not (Test-Path 'Sinemagraph-Windows-x64.zip')) { throw 'Windows ZIP bundle not created' }
+          $exeHash = (Get-FileHash 'dist/sinemagraph.exe' -Algorithm SHA256).Hash.ToLowerInvariant()
+          $zipHash = (Get-FileHash 'Sinemagraph-Windows-x64.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$exeHash  sinemagraph.exe" | Set-Content -Path 'SHA256SUMS.txt' -Encoding utf8
+          "$zipHash  Sinemagraph-Windows-x64.zip" | Add-Content -Path 'SHA256SUMS.txt' -Encoding utf8
       - name: Publish GitHub Windows preview release
         if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Publish Sinemagraph preview'))
         shell: pwsh
@@ -83,7 +87,7 @@ jobs:
           - AI auto-editing is not included.
           '@
           $notes | Set-Content -Path 'sinemagraph-preview-notes.md' -Encoding utf8
-          gh release create $tag 'dist/sinemagraph.exe#sinemagraph.exe' 'Sinemagraph-Windows-x64.zip#Sinemagraph-Windows-x64.zip' --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Sinemagraph Windows Preview ($tag)" --notes-file 'sinemagraph-preview-notes.md' --prerelease
+          gh release create $tag 'dist/sinemagraph.exe#sinemagraph.exe' 'Sinemagraph-Windows-x64.zip#Sinemagraph-Windows-x64.zip' 'SHA256SUMS.txt#SHA256SUMS.txt' --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Sinemagraph Windows Preview ($tag)" --notes-file 'sinemagraph-preview-notes.md' --prerelease
       - name: Save generated icons to fork after successful build
         if: github.ref == 'refs/heads/rebrand/sinemagraph'
         shell: pwsh
