@@ -63,13 +63,13 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Package Windows preview download
-        if: github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'Publish Sinemagraph preview')
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Publish Sinemagraph preview'))
         shell: pwsh
         run: |
           Compress-Archive -Path 'dist/*' -DestinationPath 'Sinemagraph-Windows-x64.zip' -CompressionLevel Optimal -Force
           if (-not (Test-Path 'Sinemagraph-Windows-x64.zip')) { throw 'Windows ZIP bundle not created' }
       - name: Publish GitHub Windows preview release
-        if: github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'Publish Sinemagraph preview')
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Publish Sinemagraph preview'))
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
