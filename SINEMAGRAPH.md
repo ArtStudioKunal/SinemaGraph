@@ -10,6 +10,10 @@ The Sinemagraph logo is the project owner's supplied black-and-white clapperboar
 
 The workflow [Sinemagraph Windows EXE](../../actions/workflows/sinemagraph-windows.yml) builds the Rust desktop editor on Windows x64 and publishes `Sinemagraph-Windows-x64` as an Actions artifact. The workflow generates the Sinemagraph icons before compilation.
 
+**Download existing tested build:** [Sinemagraph Windows x64 Actions run](https://github.com/ArtStudioKunal/filmcraft/actions/runs/43229950271), then open the `Sinemagraph-Windows-x64` artifact. The ZIP contains `sinemagraph.exe` and notices.
+
+**Publish a GitHub preview release:** Open [Sinemagraph Windows EXE workflow](https://github.com/ArtStudioKunal/filmcraft/actions/workflows/sinemagraph-windows.yml), choose **Run workflow**, select `main` and click **Run workflow**. When the run succeeds, it publishes a pre-release with the EXE and a bundled ZIP to [Releases](https://github.com/ArtStudioKunal/filmcraft/releases). The preview is not a stable, Windows-GUI-tested final release.
+
 For a local Windows build, install the FilmCraft Rust prerequisites and run:
 
 ```powershell
